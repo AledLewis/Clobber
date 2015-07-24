@@ -17,22 +17,32 @@ var cmd_sr_build = 'java -jar "{0}" -build {1} -label {2} -outfile {3} -logdir {
 var cmd_sr_run = 'java -jar "{0}" -run {1} -jdbc {2} -user {3} -password {4} -logdir {5}';
 
 exports.get_instance= function(config){
-return function(changed_file, outcome) {
+return function(changed_file_path, outcome) {
   var result;
-  var runid = uuid.v1();
+  var runid = uuid.v1();  
+  console.log(changed_file_path);
+  var fileRelativeDir = path.relative(config.scriptrunner.codeSourcePath,path.dirname(changed_file_path));
+  
 
-  var file = new File({
-    cwd: process.cwd(),
-    path: changed_file.path
-  });
-  file.name = file.path.replace(/^.*[\\\/]/, '');
-  file.dirnamerelative = file.relative.replace(path.sep + file.name, '');
+
+
   temp.mkdir(clobber_dir_name, function(err, target_working_dir){
     if (err) throw err;
     var target_build_dir = path.join(target_working_dir, 'build');
-    fs.mkdirsSync(path.join(target_build_dir, file.dirnamerelative));
-    fs.copySync(file.relative, path.join(target_build_dir, file.relative));
-    fs.copySync('ScriptRunner', path.join(target_build_dir, 'ScriptRunner'));
+    //make the directory to the changed file
+    var target_build_file_path = path.join(target_build_dir, fileRelativeDir, path.basename(changed_file_path));
+
+    
+    fs.ensureFile(target_build_file_path, function(err){
+      console.log(err);
+      fs.copySync(changed_file_path, target_build_file_path);
+    });
+   
+    fs.copySync(
+      path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
+      path.join(target_build_dir, 'ScriptRunner')
+    );
+
     fs.emptyDirSync(path.join(target_build_dir, 'ScriptRunner', 'Utils'));
     fs.rmdirSync(path.join(target_build_dir, 'ScriptRunner', 'Utils'));
     fs.emptyDirSync(path.join(target_build_dir, 'ScriptRunner', 'Jobs'));
@@ -57,7 +67,7 @@ return function(changed_file, outcome) {
       if (err) {
         outcome({
           "result":"error",
-          "file_location":changed_file.path,
+          "file_location":changed_file_path,
           "err":err
         });
       }
@@ -65,7 +75,7 @@ return function(changed_file, outcome) {
         if (err) {
           outcome({
             "result":"error",
-            "file_location":changed_file.path,
+            "file_location":changed_file_path,
             "err":err
           });
         }
@@ -73,7 +83,7 @@ return function(changed_file, outcome) {
         fs.rmdirSync(target_working_dir);
         outcome({
           "result":"success",
-          "file_location":changed_file.path,
+          "file_location":changed_file_path,
           "build_location":target_working_dir
         });
       });
