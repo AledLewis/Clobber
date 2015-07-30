@@ -4,7 +4,6 @@ var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var exec = require('child_process').exec;
-var File = require('vinyl');
 var fs = require('fs-extra');
 var uuid = require('uuid');
 var format = require('string-format');
@@ -46,12 +45,9 @@ return function(changed_file_path, outcome) {
 	
 	glob(path.join(target_build_dir,'ScriptRunner','builder*.cfg'), function(err, files){
 	  for (var i = 0; i <files.length; i++){
-	    console.log('path.basename(files[i]) '+path.basename(files[i]) );
-		console.log('build_config_location '+build_config_location);
-		console.log('config.scriptrunner.builder_config_location '+config.scriptrunner.builder_config_location);
+
 	    if (path.basename(files[i]) !== build_config_location){
-		   fs.remove(files[i]);
-		   console.log('removed '+files[i]);
+		   fs.removeSync(files[i]);
 		}
 	  }
 	});
