@@ -9,6 +9,7 @@ var fs = require('fs-extra');
 var uuid = require('uuid');
 var format = require('string-format');
 var temp = require('temp');
+var glob = require('glob');
 
 format.extend(String.prototype);
 
@@ -34,15 +35,28 @@ return function(changed_file_path, outcome) {
       fs.copySync(changed_file_path, target_build_file_path);
     });
    
+    var build_config_location = 
+	  config.scriptrunner.builder_config_location?
+	    config.scriptrunner.builder_config_location:'builder.cfg';
+   
     fs.copySync(
       path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
       path.join(target_build_dir, 'ScriptRunner')
     );
+	
+	glob(path.join(target_build_dir,'ScriptRunner','builder*.cfg'), function(err, files){
+	  for (var i = 0; i <files.length; i++){
+	    console.log('path.basename(files[i]) '+path.basename(files[i]) );
+		console.log('build_config_location '+build_config_location);
+		console.log('config.scriptrunner.builder_config_location '+config.scriptrunner.builder_config_location);
+	    if (path.basename(files[i]) !== build_config_location){
+		   fs.remove(files[i]);
+		   console.log('removed '+files[i]);
+		}
+	  }
+	});
+	
 
-    fs.emptyDirSync(path.join(target_build_dir, 'ScriptRunner', 'Utils'));
-    fs.rmdirSync(path.join(target_build_dir, 'ScriptRunner', 'Utils'));
-    fs.emptyDirSync(path.join(target_build_dir, 'ScriptRunner', 'Jobs'));
-    fs.rmdirSync(path.join(target_build_dir, 'ScriptRunner', 'Jobs'));
     var build_label = 'clobber-{0}-{1}'.format(os.hostname(), runid);
     var build_cmd = cmd_sr_build.format(
       config.scriptrunner.jarLocation,
@@ -67,6 +81,7 @@ return function(changed_file_path, outcome) {
         exec_result.err = err;
         exec_result.err_out = stderr;
         outcome(exec_result);
+		return;
       }
       
       exec(run_cmd, function(err,stdout, stderr) {
@@ -77,9 +92,11 @@ return function(changed_file_path, outcome) {
           exec_result.err = err;
           exec_result.err_out = stderr;
           outcome(exec_result);
+		  return;
         } else {
           exec_result.result = "success";
           outcome(exec_result);
+		  return;
         }      
       });
     
