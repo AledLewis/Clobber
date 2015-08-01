@@ -1,5 +1,5 @@
 {
-  "name": "clobber",
+  "name": "slobber",
   "version": "0.1.0",
   "description": "Use Scriptrunner to promote a file to a database",
   "main": "index.js",

@@ -1,9 +1,9 @@
-#Clobber
-Clobber is a utility that runs a [ScriptRunner](https://github.com/Fivium/ScriptRunner) build and run of a file against a database.
-##Usage
+# Slobber
+Slobber is a utility that runs a [ScriptRunner](https://github.com/Fivium/ScriptRunner) build and run of a file against a database.
+## Usage
 ```javascript
-var clobber = require('clobber');
-var clobInstance = clobber.getInstance({
+var slobber = require('slobber');
+var slobInstance = slobber.getInstance({
   "scriptrunner": {
     "jdbc": "jdbc:oracle:thin:@localhost:1521:xe",
     "user": "promotemgr",
@@ -14,7 +14,7 @@ var clobInstance = clobber.getInstance({
   }
 });
 
-clobInstance('path/to/file',function(clobResult){
- console.log(clobResult.result);
+slobInstance('path/to/file',function(slobResult){
+ console.log(slobResult.result);
 });
 ```
