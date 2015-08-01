@@ -9,94 +9,175 @@ var uuid = require('uuid');
 var format = require('string-format');
 var temp = require('temp');
 var glob = require('glob');
+var Promise = require('promise');
+
 
 format.extend(String.prototype);
 
-var clobber_dir_name = '.clobber';
-var cmd_sr_build = 'java -jar "{0}" -build {1} -label {2} -outfile {3} -logdir {4}';
-var cmd_sr_run = 'java -jar "{0}" -run {1} -jdbc {2} -user {3} -password {4} -logdir {5}';
+var clobberDirName = '.clobber';
+var cmdSrBuild = 'java -jar "{0}" -build {1} -label {2} -outfile {3} -logdir {4}';
+var cmdSrRun = 'java -jar "{0}" -run {1} -jdbc {2} -user {3} -password {4} -logdir {5}';
 
-exports.get_instance= function(config){
-return function(changed_file_path, outcome) {
-
+exports.getInstance= function(config){
+return function(changedFilePath, outcome) {
+  
   var result;
   var runid = uuid.v1();  
-  var fileRelativeDir = path.relative(config.scriptrunner.codeSourcePath,path.dirname(changed_file_path));
-
-  temp.mkdir(clobber_dir_name, function(err, target_working_dir){
+  var fileRelativeDir = path.relative(config.scriptrunner.codeSourcePath,path.dirname(changedFilePath));
+  var relativeFile = path.join(fileRelativeDir, path.basename(changedFilePath));
+  
+  console.log("Attempting to clob "+ changedFilePath);
+  
+  
+  temp.mkdir(clobberDirName, function(err, targetWorkingDir){
 
     if (err) throw err;
-    var target_build_dir = path.join(target_working_dir, 'build');
-    var target_build_file_path = path.join(target_build_dir, fileRelativeDir, path.basename(changed_file_path));
-
-    
-    fs.ensureFile(target_build_file_path, function(err){
-      fs.copySync(changed_file_path, target_build_file_path);
-    });
-   
-    var build_config_location = 
-	  config.scriptrunner.builder_config_location?
-	    config.scriptrunner.builder_config_location:'builder.cfg';
-   
-    fs.copySync(
-      path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
-      path.join(target_build_dir, 'ScriptRunner')
-    );
+    var targetBuildDir = path.join(targetWorkingDir, 'build');
+    var targetBuildFilePath = path.join(targetBuildDir, fileRelativeDir, path.basename(changedFilePath));
+    var buildLabel = 'clobber-{0}-{1}'.format(os.hostname(), runid);
+    var buildConfigLocation = 
+      config.scriptrunner.builderConfigLocation?
+        config.scriptrunner.builderConfigLocation:'builder.cfg';
+      
+    var buildCmd = cmdSrBuild.format(
+        config.scriptrunner.jarLocation,
+        targetBuildDir, 
+        buildLabel,
+        path.join(targetWorkingDir, buildLabel + '.zip'),
+        targetWorkingDir
+     );
 	
-	glob(path.join(target_build_dir,'ScriptRunner','builder*.cfg'), function(err, files){
-	  for (var i = 0; i <files.length; i++){
-
-	    if (path.basename(files[i]) !== build_config_location){
-		   fs.removeSync(files[i]);
-		}
-	  }
-	});
-	
-
-    var build_label = 'clobber-{0}-{1}'.format(os.hostname(), runid);
-    var build_cmd = cmd_sr_build.format(
+    var runCmd = cmdSrRun.format(
       config.scriptrunner.jarLocation,
-      target_build_dir, 
-      build_label,
-      path.join(target_working_dir, build_label + '.zip'),
-      target_working_dir
-    );
-    var run_cmd = cmd_sr_run.format(
-      config.scriptrunner.jarLocation,
-      path.join(target_working_dir, build_label + '.zip'),
+      path.join(targetWorkingDir, buildLabel + '.zip'),
       config.scriptrunner.jdbc, 
       config.scriptrunner.user, 
-      config.scriptrunner.password, target_working_dir
+      config.scriptrunner.password, 
+      targetWorkingDir
     );
+	
     
-    exec(build_cmd, function(err,stdout,stderr) {
-      var exec_result = {"file_location":changed_file_path, "build_output":stdout};
-
-      if (err) {
-        exec_result.result= "error";
-        exec_result.err = err;
-        exec_result.err_out = stderr;
-        outcome(exec_result);
-		return;
-      }
-      
-      exec(run_cmd, function(err,stdout, stderr) {
-        exec_result.run_output=stdout;
-
-        if (err) {
-          exec_result.result= "error";
-          exec_result.err = err;
-          exec_result.err_out = stderr;
-          outcome(exec_result);
-		  return;
-        } else {
-          exec_result.result = "success";
-          outcome(exec_result);
-		  return;
-        }      
+  
+    console.log("Target build directory is: "+targetBuildDir);
+  
+    function createBuildFileStub(message){
+     
+      return new Promise(function(resolve, reject){        
+        fs.ensureFile(targetBuildFilePath, function(err){
+          
+          if(err){
+            reject(err);
+          }
+          console.log("Created stub file and required directories in build directory");
+          resolve();
+        });  
+      });
+    }
+    
+    function copyBuildFile(){
+      return new Promise(function(resolve,reject){
+        fs.copy(changedFilePath, targetBuildFilePath, function(err){
+          if(err) reject(err);
+          console.log("Copied changed file to build directory");
+          resolve();
+        });
+      });
+    }
+    
+    function copyScriptrunnerDir(){
+      return new Promise(function(resolve,reject){
+        
+        fs.copy(
+          path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
+          path.join(targetBuildDir, 'ScriptRunner'),
+          function(err){
+            var now = new Date().getTime();
+            while(new Date().getTime() < now + 1000){ /* do nothing */ } 
+            if (err) reject(err);
+            console.log("Copied ScriptRunner branch to build dir");
+            resolve();
+        });
+      });
+    };
+    
+    function findUnneededConfigFiles(){
+      return new Promise(function(resolve,reject){    
+        
+        glob(path.join(targetBuildDir,'ScriptRunner','builder*.cfg'), function(err, files){
+          console.log("Attempting to remove unneed config files ");  
+          resolve(files.filter(function(fileName){
+            console.log("Comparing "+ path.basename(fileName) + " to " +buildConfigLocation );
+            return path.basename(fileName) !== buildConfigLocation            
+          }));          
+        });
+      });
+    }
+    
+    function deleteFile(fileName){
+    
+      return new Promise(function(resolve,reject){
+        fs.remove(fileName, function(err){
+          if(err) reject(err);
+          console.log("Deleted file:" + fileName);
+          resolve();
+        });
+      });     
+    }
+    
+    function deleteFiles(fileNames){
+ 
+      var promiseArray = fileNames.map(function(fileName){
+        return deleteFile(fileName);
+      });
+ 
+      return new Promise.all(promiseArray); 
+    }
+    
+    function sbuild(){
+      return new Promise(function(resolve,reject){    
+        exec(buildCmd, function(err,stdout,stderr){
+          console.log("Building ScriptRunner archive");
+          if (err){ 
+            err.stderr = stdout;
+            reject(err);
+          };
+          resolve(stdout);
+        });
+      });
+    }
+    
+    function srun(){
+      return new Promise(function(resolve,reject){    
+        exec(runCmd, function(err,stdout,stderr){
+          console.log("Running scriptrunner");
+          if (err){ 
+            err.stderr = stderr;
+            reject(stdout);
+          };
+          resolve(stdout);
+        });
+      });
+    }
+    
+    var clobWork = Promise.resolve();
+  
+    clobWork
+      .then(createBuildFileStub)
+      .then(copyBuildFile)
+      .then(copyScriptrunnerDir)
+      .then(findUnneededConfigFiles)
+      .then(deleteFiles)
+      .then(sbuild)
+      .then(srun)
+      .then(function(){
+        outcome({result:"success"});
+      })
+      .catch(function(err){
+        console.log(err);
+        outcome({result:"failure"});
       });
     
-    });
+   
   });
 };
 };
