@@ -3,7 +3,7 @@ Clobber is a utility that runs a [ScriptRunner](https://github.com/Fivium/Script
 ##Usage
 ```javascript
 var clobber = require('clobber');
-var clob_instance = clobber.get_instance({
+var clobInstance = clobber.getInstance({
   "scriptrunner": {
     "jdbc": "jdbc:oracle:thin:@localhost:1521:xe",
     "user": "promotemgr",
@@ -14,7 +14,7 @@ var clob_instance = clobber.get_instance({
   }
 });
 
-clob_instance('path/to/file',function(clob_result){
- console.log(clob_result.result);
+clobInstance('path/to/file',function(clobResult){
+ console.log(clobResult.result);
 });
 ```
