@@ -155,7 +155,7 @@ return function(changedFilePath, outcome) {
           console.log("Running scriptrunner");
           if (err){ 
             err.stderr = stderr;
-            reject(stdout);
+            reject(stderr);
           };
           resolve(stdout);
         });
@@ -173,11 +173,18 @@ return function(changedFilePath, outcome) {
       .then(sbuild)
       .then(srun)
       .then(function(){
-        outcome({result:"success"});
+        outcome({
+          "result":"success", 
+          "clobFile":relativeFile
+        });
       })
       .catch(function(err){
         console.log(err);
-        outcome({result:"failure"});
+        outcome({
+          "result":"failure",
+          "clobFile":relativeFile,
+          "err":JSON.stringify(err)
+        });
       });
     
    
