@@ -25,6 +25,7 @@ return function(changedFilePath, outcome) {
   var runid = uuid.v1();  
   var fileRelativeDir = path.relative(config.scriptrunner.codeSourcePath,path.dirname(changedFilePath));
   var relativeFile = path.join(fileRelativeDir, path.basename(changedFilePath));
+  var deleteFileList;
   
   console.log("Attempting to clob "+ changedFilePath);
   
@@ -90,6 +91,9 @@ return function(changedFilePath, outcome) {
         fs.copy(
           path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
           path.join(targetBuildDir, 'ScriptRunner'),
+          { 
+            filter : function(file){return file.split('.').pop() != 'mf'}
+          },
           function(err){
             var now = new Date().getTime();
             while(new Date().getTime() < now + 1000){ /* do nothing */ } 

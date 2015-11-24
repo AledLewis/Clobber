@@ -1,6 +1,6 @@
 {
   "name": "slobber",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "description": "Use Scriptrunner to promote a file to a database",
   "main": "index.js",
   "scripts": {
