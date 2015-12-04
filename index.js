@@ -90,6 +90,9 @@ return function(changedFilePath, outcome) {
         fs.copy(
           path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
           path.join(targetBuildDir, 'ScriptRunner'),
+          { 
+            filter : function(file){return file.split('.').pop() != 'mf'}
+          },
           function(err){
             var now = new Date().getTime();
             while(new Date().getTime() < now + 1000){ /* do nothing */ } 
