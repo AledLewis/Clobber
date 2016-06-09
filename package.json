@@ -16,6 +16,9 @@
     "temp": "^0.8.3",
     "uuid": "^2.0.1"
   },
+  "dev-dependencies": {
+    "jasmine":"1.14.5"
+  },
   "repository": "https://github.com/AledLewis/clobber",
   "contributors": [
     {
