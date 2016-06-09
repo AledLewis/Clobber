@@ -16,9 +16,6 @@
     "temp": "^0.8.3",
     "uuid": "^2.0.1"
   },
-  "dev-dependencies": {
-    "jasmine":"1.14.5"
-  },
   "repository": "https://github.com/AledLewis/clobber",
   "contributors": [
     {
@@ -26,5 +23,11 @@
       "email": "aled@aled-lewis.co.uk",
       "url": "https://github.com/aledlewis"
     }
-  ]
+  ],
+  "devDependencies": {
+    "jasmine": "^2",
+    "jasmine-node": "^1.14.5",
+    "mock-fs": "^3.6.0",
+    "nock-exec": "git+ssh://github.com/AledLewis/nock-exec"
+  }
 }

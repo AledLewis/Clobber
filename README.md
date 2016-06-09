@@ -10,7 +10,8 @@ var slobInstance = slobber.getInstance({
     "password": "pass",
     "jarLocation": "path/to/ScriptRunner.jar",
     "codeSourcePath":"path/to/scriptrunner/build/dir",
-    "builder_config_location": "builder.cfg"
+    "builderConfigLocation": "builder.cfg",
+    "buildDir":"/tmp"
   }
 });
 

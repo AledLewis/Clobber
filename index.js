@@ -142,7 +142,7 @@ return function(changedFilePath, outcome) {
           console.log("Building ScriptRunner archive");
           if (err){ 
             err.stderr = stdout;
-            reject(err);
+            reject({"stdout":stdout, "stderr":stderr});
           };
           resolve(stdout);
         });
@@ -154,8 +154,7 @@ return function(changedFilePath, outcome) {
         exec(runCmd, function(err,stdout,stderr){
           console.log("Running scriptrunner");
           if (err){ 
-            err.stderr = stderr;
-            reject(stderr);
+            reject({"stdout":stdout, "stderr":stderr});
           };
           resolve(stdout);
         });
@@ -179,11 +178,12 @@ return function(changedFilePath, outcome) {
         });
       })
       .catch(function(err){
-        console.log(err);
+        console.log(JSON.stringify(err));
         outcome({
           "result":"failure",
           "clobFile":relativeFile,
-          "err":JSON.stringify(err)
+          "stdout":err.stdout,
+          "stderr":err.stderr
         });
       });
     
