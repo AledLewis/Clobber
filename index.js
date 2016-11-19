@@ -23,7 +23,7 @@ return function(changedFilePath, outcome) {
   
   var result;
   var runid = uuid.v1();  
-  var fileRelativeDir = path.relative(config.scriptrunner.codeSourcePath,path.dirname(changedFilePath));
+  var fileRelativeDir = path.relative(config.codeSourcePath,path.dirname(changedFilePath));
   var relativeFile = path.join(fileRelativeDir, path.basename(changedFilePath));
   
   console.log("Attempting to clob "+ changedFilePath);
@@ -36,11 +36,11 @@ return function(changedFilePath, outcome) {
     var targetBuildFilePath = path.join(targetBuildDir, fileRelativeDir, path.basename(changedFilePath));
     var buildLabel = 'clobber-{0}-{1}'.format(os.hostname(), runid);
     var buildConfigLocation = 
-      config.scriptrunner.builderConfigLocation?
-        config.scriptrunner.builderConfigLocation:'builder.cfg';
+      config.builderConfigLocation?
+        config.builderConfigLocation:'builder.cfg';
       
     var buildCmd = cmdSrBuild.format(
-        config.scriptrunner.jarLocation,
+        config.jarLocation,
         targetBuildDir, 
         buildLabel,
         path.join(targetWorkingDir, buildLabel + '.zip'),
@@ -48,11 +48,11 @@ return function(changedFilePath, outcome) {
      );
 	
     var runCmd = cmdSrRun.format(
-      config.scriptrunner.jarLocation,
+      config.jarLocation,
       path.join(targetWorkingDir, buildLabel + '.zip'),
-      config.scriptrunner.jdbc, 
-      config.scriptrunner.user, 
-      config.scriptrunner.password, 
+      config.jdbc, 
+      config.user, 
+      config.password, 
       targetWorkingDir
     );
 	
@@ -88,7 +88,7 @@ return function(changedFilePath, outcome) {
       return new Promise(function(resolve,reject){
         
         fs.copy(
-          path.join(config.scriptrunner.codeSourcePath,'ScriptRunner'), 
+          path.join(config.codeSourcePath,'ScriptRunner'), 
           path.join(targetBuildDir, 'ScriptRunner'),
           { 
             filter : function(file){return file.split('.').pop() != 'mf'}

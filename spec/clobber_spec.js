@@ -9,14 +9,12 @@ describe("Slobber", function () {
   beforeEach(function () {
 
     this.slobberConfig = {
-      "scriptrunner": {
-        "jdbc": "mocked",
-        "user": "mocked",
-        "password": "mocked",
-        "jarLocation": "mocked",
-        "codeSourcePath": realFileLocations.validCodeSourcePath,
-        "builder_config_location": realFileLocations.validBuildFile,
-      }
+      "jdbc": "mocked",
+      "user": "mocked",
+      "password": "mocked",
+      "jarLocation": "mocked",
+      "codeSourcePath": realFileLocations.validCodeSourcePath,
+      "builder_config_location": realFileLocations.validBuildFile,
     }
 
   });

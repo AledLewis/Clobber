@@ -1,6 +1,6 @@
 {
   "name": "slobber",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Use Scriptrunner to promote a file to a database",
   "main": "index.js",
   "scripts": {
@@ -16,9 +16,6 @@
     "temp": "^0.8.3",
     "uuid": "^2.0.1"
   },
-  "dev-dependencies": {
-    "jasmine":"1.14.5"
-  },
   "repository": "https://github.com/AledLewis/clobber",
   "contributors": [
     {
@@ -31,6 +28,7 @@
     "jasmine": "^2",
     "jasmine-node": "^1.14.5",
     "mock-fs": "^3.6.0",
-    "nock-exec": "git+ssh://github.com/AledLewis/nock-exec"
+    "nock-exec": "https://github.com/AledLewis/nock-exec.git"
+    
   }
 }
